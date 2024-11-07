@@ -11,6 +11,8 @@
 
 using namespace std;
 
+/*
+This is for the Final Release of Pseudocode
 void TrafficData(std::map<std::string, std::array<std::list<std::string>, 3>>& trafficMap, const std::string& filename) {
     // Open the file
     // If file cannot be opened, output an error and exit function
@@ -44,7 +46,6 @@ void trafficSim(std::map<std::string, std::array<std::list<std::string>, 3>>& tr
     }
 }
 
-/*
 //Add vehicle to lane 
 void addVehicle(std::list<std::string>& vehicleList, const std::string& vehicleType) {
     //Add vehicle type to speicfic list
@@ -83,17 +84,23 @@ void checkTestResult(const string& testName, bool condition) {
 //Main Function
 int main()
 {
+    
+    /*
+    This is for the Final Release of Pseudocode
+
     //Define Map (store Lane and Vehcile data)
-    /*std::map<std::string, std::array<std::list<std::string>, 3>> trafficMap;
+    std::map<std::string, std::array<std::list<std::string>, 3>> trafficMap;
 
     //Read traffic map data from File
     TrafficData (trafficMap, ""); //Add traffic Data txt file
 
 
     //run Traffic simulation for 25 intervals
-    trafficSim(trafficMap, 25);*/
+    trafficSim(trafficMap, 25);
 
-    //Output Final Traffic (total vehicles, average wait time)
+    //Output Final Traffic (total vehicles, average wait time) */
+
+    //Unit Testing
 
     std::list<std::string> testLane;
     // Test 1: Add a vehicle and verify
