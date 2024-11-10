@@ -7,19 +7,16 @@
 #include <list>
 #include <string>
 #include <fstream>
-#include <random>
+#include <ctime> //srand and time
 
 using namespace std;
 
 void TrafficData(std::map<std::string, std::array<std::list<std::string>, 3>>& trafficMap, const std::string & filename)
 {
     // Open the file
-    ifstream infile(filename);
-    // If file cannot be opened, output an error and exit function
-    // For each line in the file:
-    // Parse lane name, vehicle type, and other details
-    // Insert vehicle into the appropriate list in the array for that lane
-    // Close the file
+    ifstream infile("trafficData.txt");
+
+    // File checking
     if (!infile.is_open())
     {
         cout << "Error, Can't open file: ";
@@ -32,53 +29,93 @@ void TrafficData(std::map<std::string, std::array<std::list<std::string>, 3>>& t
         // Set vehicle in appropriate list base on type
         if (vehicleType == "Car")
         {
-            trafficMap[lane][0].push_back(vehicleType); //Add car to first list
+            trafficMap[lane][0].push_back(vehicleType); // Add car to first list
         }
         else if (vehicleType == "Truck")
         {
-            trafficMap[lane][1].push_back(vehicleType); //Add truck to  second list
+            trafficMap[lane][1].push_back(vehicleType); // Add truck to  second list
         }
         else if (vehicleType == "Motorcycle")
         {
-            trafficMap[lane][2].push_back(vehicleType); //Add Motorcycle to thirdlist
+            trafficMap[lane][2].push_back(vehicleType); // Add Motorcycle to thirdlist
         }
     }
 
-    infile.close();
+    infile.close(); // Close the file
 }
 
 void trafficSim(std::map<std::string, std::array<std::list<std::string>, 3>> &trafficMap, int intervals)
 {
+    // Random Number generator
+    srand(static_cast<unsigned int>(time(0)));
 
-    // simulation traffic 
+    // simulation traffic
     for (int i = 0; i < intervals; i++)
     {
         // Display  current state of traffic map (number of vehicles in each lane)
-
+        cout << "Interval " << i + 1 << ":" << endl;
         // For each lane in the map:
-        // Check traffic light is green for this lane (simulate based on interval)
-        // If green:
-        // Move one vehicle from each list (car, truck, motorcycle) forward
-        // Update wait times for remaining vehicles in the list
-        // If red, do nothing for this lane
+        for (auto &lane : trafficMap)
+        {
+            string laneName = lane.first;     // Lane name
+            auto &vehicleLists = lane.second; // Array of lists (vehicle Types for first lane)
+                                              // Check traffic light is green for this lane (simulate based on interval)
+            bool lightGreen = (i % 2 == 0);
+            cout << "Lane " << laneName << " traffic light is " << (lightGreen ? "GREEN" : "RED") << endl;
 
-        // Randomly decide if a vehicle breakdown or traffic spike occurs
-        // If breakdown, temporarily block lane and add a delay
-        // If spike, add additional vehicles to the lane
+            // If green:
+            if (lightGreen)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    if (!vehicleLists[j].empty())
+                    {
+                        // Move one vehicle from each list (car, truck, motorcycle) forward
+                        cout << "Moving " << vehicleLists[j].front() << " forward in " << laneName << endl;
+                        vehicleLists[j].pop_front(); // Remove first vehicle from list
+                    }
 
-        // Print changes for this interval, "Added 2 cars to Northbound lane"
-        // pause to simulate real-time passage of time between intervals
+                    // Update wait times for remaining vehicles in the list
+
+                    // If breakdown, temporarily block lane and add a delay
+                    // If spike, add additional vehicles to the lane
+
+                    // Print changes for this interval, "Added 2 cars to Northbound lane"
+                    // pause to simulate real-time passage of time between intervals
+                }
+            }
+            // If red, do nothing for this lane
+            else
+            {
+                cout << "Lane " << laneName << " is on RED; vehicles remain in place." << endl;
+            }
+            // Random Traffic Simulate spike / break down
+            int event = rand() % 10; // Generate a random event between 0 and 9
+            if (event < 2)
+            { // 20% chance of
+                cout << "Breakdown in " << laneName << "! Traffic delayed." << endl;
+            }
+            else if (event < 4)
+            { // 20% chance of traffic spike
+                // Randomly add a vehicle type during a traffic spike
+                int vehicleType = rand() % 3; // Randomly pick Car (0), Truck (1), or Motorcycle (2)
+                string vehicleName = (vehicleType == 0) ? "Car" : (vehicleType == 1) ? "Truck"
+                                                                                     : "Motorcycle";
+                vehicleLists[vehicleType].push_back(vehicleName); // Add the randomly chosen vehicle type to the lane
+                cout << "Traffic spike! Added an extra " << vehicleName << " to " << laneName << endl;
+            }
+        }
     }
 }
 
 // Add vehicle to lane
-void addVehicle(std::list<std::string> &vehicleList, const std::string &vehicleType)
+void addVehicle(std::list<std::string>& vehicleList, const std::string & vehicleType)
 {
     // Add vehicle type to speicfic list
 }
 
 // Remove Vehicle from lane
-void removeVehicle(std::list<std::string> &vehicleList)
+void removeVehicle(std::list<std::string> & vehicleList)
 {
     // Remove  first vehicle from the specified list if not empty
 }
