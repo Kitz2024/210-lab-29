@@ -7,121 +7,176 @@
 #include <list>
 #include <string>
 #include <fstream>
-#include <random>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
-/*
-This is for the Final Release of Pseudocode
-void TrafficData(std::map<std::string, std::array<std::list<std::string>, 3>>& trafficMap, const std::string& filename) {
-    // Open the file
-    // If file cannot be opened, output an error and exit function
-    // For each line in the file:
-        // Parse lane name, vehicle type, and other details
-        // Insert vehicle into the appropriate list in the array for that lane
-    // Close the file
-}
+//structure to store vehicle info with wait time
+struct VehicleInfo {
+    string type;
+    int waitTime; // Number of intervals the vehicle has been in the lane
+};
 
-void trafficSim(std::map<std::string, std::array<std::list<std::string>, 3>>& trafficMap, int intervals)
-{
+// Function prototypes
+void TrafficData(std::map<std::string, std::array<std::list<VehicleInfo>, 3>>& trafficMap, const std::string& filename);
+void trafficSim(std::map<std::string, std::array<std::list<VehicleInfo>, 3>>& trafficMap, int intervals);
+void addVehicle(std::list<VehicleInfo>& vehicleList, const std::string& vehicleType);
+void removeVehicle(std::list<VehicleInfo>& vehicleList);
+void printFinalTraffic(const std::map<std::string, std::array<std::list<VehicleInfo>, 3>>& trafficMap);
 
-    // Loop through each time interval
-    for (int i = 0; i < intervals; i++)
-    {
-// Display  current state of  traffic map (number of vehicles in each lane)
-        
-        // For each lane in the map:
-            // Check traffic light is green for this lane (simulate based on interval)
-            // If green:
-                // Move one vehicle from each list (car, truck, motorcycle) forward
-                // Update wait times for remaining vehicles in the list
-            // If red, do nothing for this lane
-
-            // Randomly decide if a vehicle breakdown or traffic spike occurs
-                // If breakdown, temporarily block lane and add a delay
-                // If spike, add additional vehicles to the lane
-            
-        // Print changes for this interval, "Added 2 cars to Northbound lane"
-        // pause to simulate real-time passage of time between intervals
-    }
-}
-
-//Add vehicle to lane 
-void addVehicle(std::list<std::string>& vehicleList, const std::string& vehicleType) {
-    //Add vehicle type to speicfic list
-}
-
-//Remove Vehicle from lane
-void removeVehicle(std::list<std::string>& vehicleList) {
-    // Remove  first vehicle from the specified list if not empty
-    }
-}
-*/
-
-//Testing Simulation
-void addVehicle(std::list<std::string>& vehicleList, const std::string& vehicleType) {
-    //Add vehicle type to speicfic list
-    vehicleList.push_back(vehicleType);
-}
-
-//Remove Vehicle from lane
-void removeVehicle(std::list<std::string>& vehicleList) {
-    // Remove  first vehicle from the specified list if not empty
-    if (!vehicleList.empty()) {
-        vehicleList.pop_front();
-    }
-}
-
-//Lane Test Pass/Failed
-void checkTestResult(const string& testName, bool condition) {
-    if (condition) {
-        cout << testName << " passed." << endl;
-    } else {
-        cout << testName << " failed." << endl;
-    }
-}
-
-//Main Function
 int main()
 {
-    
-    /*
-    This is for the Final Release of Pseudocode
+    // Define Map (store Lane and Vehicle data)
+    std::map<std::string, std::array<std::list<VehicleInfo>, 3>> trafficMap;
 
-    //Define Map (store Lane and Vehcile data)
-    std::map<std::string, std::array<std::list<std::string>, 3>> trafficMap;
+    // Read traffic map data from file
+    TrafficData(trafficMap, "C:/210-Coding/projects/210-lab-29/trafficData.txt");
 
-    //Read traffic map data from File
-    TrafficData (trafficMap, ""); //Add traffic Data txt file
-
-
-    //run Traffic simulation for 25 intervals
+    // Run Traffic simulation for 25 intervals
     trafficSim(trafficMap, 25);
 
-    //Output Final Traffic (total vehicles, average wait time) */
-
-    //Unit Testing
-
-    std::list<std::string> testLane;
-    // Test 1: Add a vehicle and verify
-    addVehicle(testLane, "Car");
-    checkTestResult("Test 1 - Add Vehicle (Car)", testLane.size() == 1 && testLane.front() == "Car");
-
-    // Test 2: Add multiple vehicles and verify order
-    addVehicle(testLane, "Truck");
-    addVehicle(testLane, "Motorcycle");
-    checkTestResult("Test 2 - Add Vehicles (Truck, Motorcycle)", 
-                    testLane.size() == 3 && testLane.back() == "Motorcycle");
-
-    // Test 3: Remove vehicle and verify
-    removeVehicle(testLane);
-    checkTestResult("Test 3 - Remove Vehicle (should remove Car)", 
-                    testLane.size() == 2 && testLane.front() == "Truck");
-
-    // Test 4: Remove remaining vehicles
-    removeVehicle(testLane);
-    removeVehicle(testLane);
-    checkTestResult("Test 4 - Remove All Vehicles (should be empty)", testLane.empty());
-
+    // Output final traffic (total vehicles, average wait time) 
+    printFinalTraffic(trafficMap);
     return 0;
+}
+
+void TrafficData(std::map<std::string, std::array<std::list<VehicleInfo>, 3>>& trafficMap, const std::string& filename) {
+    // Open the file
+    ifstream infile("C:/210-Coding/projects/210-lab-29/trafficData.txt");
+    if (!infile.is_open()) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    string lane;
+    string vehicleType;
+    while (infile >> lane >> vehicleType) {
+        // Based on the vehicle type, find the correct index in the array
+        int vehicleIndex = (vehicleType == "Car") ? 0 :
+                           (vehicleType == "Truck") ? 1 : 2;
+
+        // Add vehicle to appropriate list in the map with initial wait time as 0
+        trafficMap[lane][vehicleIndex].push_back({vehicleType, 0});
+    }
+    
+    //Closing file
+    infile.close();
+}
+
+void trafficSim(std::map<std::string, std::array<std::list<VehicleInfo>, 3>>& trafficMap, int intervals)
+{
+    srand(static_cast<unsigned int>(time(0)));
+
+    // Loop each time interval
+    for (int i = 0; i < intervals; i++)
+    {
+        cout << "Interval " << i + 1 << ":" << endl;
+
+        // For each lane, process the vehicles
+        for (auto& lane : trafficMap)
+        {
+            string laneName = lane.first;
+            auto& vehicleLists = lane.second;
+
+            // Simulate green/red light (alternates every 2 intervals)
+            bool lightGreen = (i % 2 == 0); // Green light for even intervals, red for odd
+
+            // Print current state of the traffic map
+            cout << laneName << " - Cars: " << vehicleLists[0].size()
+                 << ", Trucks: " << vehicleLists[1].size()
+                 << ", Motorcycles: " << vehicleLists[2].size() << endl;
+
+            if (lightGreen)
+            {
+                // Green light: Move vehicles forward
+                if (!vehicleLists[0].empty()) {
+                    removeVehicle(vehicleLists[0]);
+                    cout << "  Moved 1 Car forward." << endl;
+                }
+                if (!vehicleLists[1].empty()) {
+                    removeVehicle(vehicleLists[1]);
+                    cout << "  Moved 1 Truck forward." << endl;
+                }
+                if (!vehicleLists[2].empty()) {
+                    removeVehicle(vehicleLists[2]);
+                    cout << "  Moved 1 Motorcycle forward." << endl;
+                }
+            }
+            else {
+                cout << "  Red light - no vehicles moved." << endl;
+            }
+
+            // Simulate breakdown every 5 intervals (manual event simulation)
+            if (i % 5 == 0) {
+                cout << "  Breakdown! Blocking lane for this interval." << endl;
+            }
+
+            // Simulate traffic spike every 3 intervals (manual event simulation)
+            if (i % 3 == 0) {
+                int randomChoice = rand() % 3; // Random number between 0 and 2
+                if (randomChoice == 0) {
+                    addVehicle(vehicleLists[0], "Car");
+                    cout << "  Traffic spike: Added 1 Car." << endl;
+                } else if (randomChoice == 1) {
+                    addVehicle(vehicleLists[1], "Truck");
+                    cout << "  Traffic spike: Added 1 Truck." << endl;
+                } else {
+                    addVehicle(vehicleLists[2], "Motorcycle");
+                    cout << "  Traffic spike: Added 1 Motorcycle." << endl;
+                }
+            }
+
+            // Update wait time for vehicles in the lane
+            for (auto& vehicle : vehicleLists[0]) {
+                vehicle.waitTime++;
+            }
+            for (auto& vehicle : vehicleLists[1]) {
+                vehicle.waitTime++;
+            }
+            for (auto& vehicle : vehicleLists[2]) {
+                vehicle.waitTime++;
+            }
+        }
+
+        // Print a blank line after each interval
+        cout << endl;
+    }
+}
+
+void addVehicle(std::list<VehicleInfo>& vehicleList, const std::string& vehicleType) {
+    vehicleList.push_back({vehicleType, 0}); // New vehicle with wait time 0
+}
+
+void removeVehicle(std::list<VehicleInfo>& vehicleList) {
+    if (!vehicleList.empty()) {
+        vehicleList.pop_front(); // Remove the first vehicle from  list
+    }
+}
+
+void printFinalTraffic(const std::map<std::string, std::array<std::list<VehicleInfo>, 3>>& trafficMap)
+{
+    int totalVehicles = 0;
+    int totalWaitTime = 0;
+    int numVehicles = 0;  // calculate the average wait time
+
+    // Calculate the total number of vehicles and total wait time
+    for (const auto& lane : trafficMap)
+    {
+        for (int i = 0; i < 3; i++) {
+            for (const auto& vehicle : lane.second[i]) {
+                totalVehicles++;  // total vehicle count
+                totalWaitTime += vehicle.waitTime;  // Add  wait time of each vehicle
+                numVehicles++;  //counter for the number of vehicles
+            }
+        }
+    }
+
+    // average wait time
+    double averageWaitTime = (numVehicles > 0) ? static_cast<double>(totalWaitTime) / numVehicles : 0.0;
+
+    // Output final traffic data
+    cout << "Final Traffic Report:" << endl;
+    cout << "Total vehicles: " << totalVehicles << endl;
+    cout << "Average wait time: " << averageWaitTime << " intervals" << endl;
 }
